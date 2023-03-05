@@ -215,7 +215,7 @@
  * @method mixed hscan($key, $cursor, $MATCH = null, $pattern = null, $COUNT = null, $count = null) Incrementally iterate hash fields and associated values. <https://redis.io/commands/hscan>
  * @method mixed zscan($key, $cursor, $MATCH = null, $pattern = null, $COUNT = null, $count = null) Incrementally iterate sorted sets elements and associated scores. <https://redis.io/commands/zscan>
  *
- * @author ZhanGUangcheng <14712905@qq.com>
+ * @author ZhanGuangcheng <14712905@qq.com>
  * @link https://github.com/zhanguangcheng/php-redis-client
  */
 class RedisClient
@@ -274,6 +274,11 @@ class RedisClient
     {
         array_unshift($params, strtoupper($name));
         return call_user_func_array([$this, 'executeCommand'], $params);
+    }
+
+    public function rawCommand()
+    {
+        return call_user_func_array([$this, 'executeCommand'], func_get_args());
     }
 
     public function executeCommand()
