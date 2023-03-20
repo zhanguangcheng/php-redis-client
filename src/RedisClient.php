@@ -227,7 +227,9 @@ class RedisClient
     public $database = 0;
     public $connectionTimeout;
     public $socketClientFlags = STREAM_CLIENT_CONNECT;
+    public $pipeline = false;
     private $_pool = [];
+    private $_commandStack = [];
 
     public function __construct($params = [])
     {
@@ -260,6 +262,8 @@ class RedisClient
             throw new Exception($message, $errorCode);
         }
         $this->_pool[$connectionString] = $socket;
+        $pipeline = $this->pipeline;
+        $this->pipeline(false);
         if ($this->password !== null) {
             if ($this->username) {
                 $this->executeCommand('AUTH', $this->username, $this->password);
@@ -268,6 +272,25 @@ class RedisClient
             }
         }
         $this->executeCommand('SELECT', $this->database);
+        $this->pipeline($pipeline);
+    }
+
+    public function pipeline($value = true)
+    {
+        $this->pipeline = $value;
+        return $this;
+    }
+
+    public function exec()
+    {
+        $result = [];
+        $stack = $this->_commandStack;
+        $this->pipeline(false);
+        $this->_commandStack = [];
+        foreach ($stack as $value) {
+            $result[] = $this->parseResponse();
+        }
+        return $result;
     }
 
     public function __call($name, $params)
@@ -293,7 +316,12 @@ class RedisClient
         if ($written === false) {
             throw new Exception("Failed to write to socket.\nRedis command was: " . $command);
         }
-        return $this->parseResponse();
+        if ($this->pipeline) {
+            $this->_commandStack[] = $command;
+            return $this;
+        } else {
+            return $this->parseResponse();
+        }
     }
 
     public function close()

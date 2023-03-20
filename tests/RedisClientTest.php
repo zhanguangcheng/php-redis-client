@@ -19,6 +19,7 @@ class RedisClientTest extends PHPUnit\Framework\TestCase
             $redis->del('string_key2');
             $redis->del('hash_key');
             $redis->del('list_key');
+            $redis->del('pipeline');
         } catch (Exception $e) {
         }
     }
@@ -92,6 +93,18 @@ class RedisClientTest extends PHPUnit\Framework\TestCase
         $this->assertEquals('Apple', $redis->rpop('list_key'));
         $this->assertEquals('Banana', $redis->lpop('list_key'));
         $this->assertEquals('1', $redis->llen('list_key'));
+    }
+
+    public function testPipeline()
+    {
+        $redis = $this->getRedis();
+        $result = $redis->pipeline()
+            ->hset('pipeline', 'name', 'Grass')
+            ->hset('pipeline', 'age', 18)
+            ->hget('pipeline', 'name')
+            ->hget('pipeline', 'age')
+            ->exec();
+        $this->assertEquals(['1', '1', 'Grass', '18'],$result);
     }
 
     public function testCommandError()

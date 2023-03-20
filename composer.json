@@ -1,4 +1,9 @@
 {
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    },
     "require": {
         "php": ">=5.4.0"
     },
